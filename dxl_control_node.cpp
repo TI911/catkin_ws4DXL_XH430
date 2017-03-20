@@ -19,9 +19,10 @@
 #include "ros/ros.h"
 #include "dynamixel_sdk.h"
 #include "std_msgs/String.h"
+#include "snake_msgs/snake_joint_command.h"
 
 #define NUM_OF_MOTOR 2
-// using namespace dynamixel;
+using namespace dynamixel;
 
 // Control table address
 #define ADDR_PRO_TORQUE_ENABLE          562        // DXL_PRO Control table address is different in Dynamixel model
@@ -123,6 +124,8 @@ int serpenoid_curve(int pos);
 
 double t = 0.0;
 
+void callBackOfJointCommand(snake_msgs::snake_joint_command joint_command);
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "dxl_control_node");
@@ -138,14 +141,16 @@ int main(int argc, char **argv)
 		//bulk_read_write();
 		//dxl_read_write();
 
-		int pos = 2048+1024*sin(t);
+		ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
+
+/*		int pos = 2048+1024*sin(t);
 		for(int i=0; i<NUM_OF_MOTOR; i++){
 			dxl_move_to_goal_position(i,pos);
 		}
 
 		//serpenoid_curve(pos);
 		t = t+0.01;
-		if(t >= 2*M_PI) t=0;
+		if(t >= 2*M_PI) t=0;*/
 
 		//ROS_INFO("t = %f \n", t);
 		ros::Duration(0.01).sleep();
@@ -159,6 +164,14 @@ int main(int argc, char **argv)
 	// Close port
 	portHandler->closePort();
 	ROS_INFO("PORT CLOSED!\n");
+}
+void  callBackOfJointCommand(snake_msgs::snake_joint_command joint_command)
+{
+
+	int pos = (joint_command.target_position*4095)/360+2048;
+	int id  = joint_command.joint_index;
+	dxl_move_to_goal_position(id, pos);
+
 }
 
 int dxl_init()
@@ -550,6 +563,9 @@ int dxl_move_to_goal_position(int id, int goalPos)
 	int  dxl_comm_result      = COMM_TX_FAIL;         // Communication result
 	bool dxl_addparam_result  = false;                // addParam result
 	uint8_t param_goal_position[4];
+
+	if(goalPos < 1024) goalPos=1024;
+	if(goalPos > 3072) goalPos=3072;
 
 	// Allocate goal position value into byte array
 	param_goal_position[0] = DXL_LOBYTE(DXL_LOWORD(goalPos));

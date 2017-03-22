@@ -126,22 +126,25 @@ double t = 0.0;
 
 void callBackOfJointCommand(snake_msgs::snake_joint_command joint_command);
 
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "dxl_control_node");
 	ros::NodeHandle nh;
 
+	ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
+
 	ros::Rate loop_rate(10);
 
 	if(dxl_init()!=0) ROS_INFO("DXL INITIAL OK!\n");
-	if(dxl_torque_enable() != 0) ROS_INFO("DXL TORQUE ENABLE OK!\n");
+	if(dxl_torque_enable()!= 0) ROS_INFO("DXL TORQUE ENABLE OK!\n");
 
 	while(ros::ok()){
 		//dxl_ping();
 		//bulk_read_write();
 		//dxl_read_write();
 
-		ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
+		//ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
 
 /*		int pos = 2048+1024*sin(t);
 		for(int i=0; i<NUM_OF_MOTOR; i++){
@@ -167,11 +170,10 @@ int main(int argc, char **argv)
 }
 void  callBackOfJointCommand(snake_msgs::snake_joint_command joint_command)
 {
-
 	int pos = (joint_command.target_position*4095)/360+2048;
 	int id  = joint_command.joint_index;
 	dxl_move_to_goal_position(id, pos);
-
+	ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
 }
 
 int dxl_init()
@@ -666,8 +668,6 @@ int serpenoid_curve(int pos)
 		// Clear bulkwrite parameter storage
 		//groupBulkWrite.clearParam();
 		groupSyncWrite.clearParam();
-
-
 
 	//}
 

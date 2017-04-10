@@ -21,6 +21,9 @@
 #include "std_msgs/String.h"
 #include "snake_msgs/snake_joint_command.h"
 
+#include "joy_handler_hori/JoySelectedData.h"
+
+
 #define NUM_OF_MOTOR 2
 using namespace dynamixel;
 
@@ -123,8 +126,10 @@ int dxl_move_to_goal_position(int id, int goalPos);
 int serpenoid_curve(int pos);
 
 double t = 0.0;
+int goal_0 = 0;
+int goal_1 = 0;
 
-void callBackOfJointCommand(snake_msgs::snake_joint_command joint_command);
+void callBackOfJointCommand(joy_handler_hori::JoySelectedData joy_data);
 
 
 int main(int argc, char **argv)
@@ -132,7 +137,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "dxl_control_node");
 	ros::NodeHandle nh;
 
-	ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
+	ros::Subscriber joint_command = nh.subscribe("joy_selected_data", 100, &callBackOfJointCommand);
 
 	ros::Rate loop_rate(10);
 
@@ -168,12 +173,43 @@ int main(int argc, char **argv)
 	portHandler->closePort();
 	ROS_INFO("PORT CLOSED!\n");
 }
-void  callBackOfJointCommand(snake_msgs::snake_joint_command joint_command)
+void  callBackOfJointCommand(joy_handler_hori::JoySelectedData joy)
 {
-	int pos = (joint_command.target_position*4095)/360+2048;
-	int id  = joint_command.joint_index;
-	dxl_move_to_goal_position(id, pos);
-	ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+	if(joy.button_r1){
+
+		goal_0++;
+		int pos = (goal_0*4095)/360+2048;
+		int id  = 0;
+		dxl_move_to_goal_position(id, pos);
+		ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+	}
+
+	if(joy.button_l1){
+
+		goal_0--;
+		int pos = (goal_0*4095)/360+2048;
+		int id  = 0;
+		dxl_move_to_goal_position(id, pos);
+		ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+	}
+
+	if(joy.button_r2){
+
+		goal_1++;
+		int pos = (goal_1*4095)/360+2048;
+		int id  = 1;
+		dxl_move_to_goal_position(id, pos);
+		ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+	}
+
+	if(joy.button_l2){
+
+		goal_1--;
+		int pos = (goal_1*4095)/360+2048;
+		int id  = 1;
+		dxl_move_to_goal_position(id, pos);
+		ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+	}
 }
 
 int dxl_init()

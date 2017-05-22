@@ -24,7 +24,7 @@
 #include "joy_handler_hori/JoySelectedData.h"
 
 
-#define NUM_OF_MOTOR 2
+#define NUM_OF_MOTOR 20
 using namespace dynamixel;
 
 // Control table address
@@ -57,8 +57,7 @@ using namespace dynamixel;
 #define TORQUE_ENABLE                   1                   // Value for enabling the torque
 #define TORQUE_DISABLE                  0                   // Value for disabling the torque
 #define DXL_MINIMUM_POSITION_VALUE      1024  //-150000     // Dynamixel will rotate between this value
-#define DXL_MAXIMUM_POSITION_VALUE      3072  //150000      // and this value (note that the Dynamixel would not move when the position value is 
-															//out of movable range. Check e-manual about the range of the Dynamixel you use.)
+#define DXL_MAXIMUM_POSITION_VALUE      3072  //150000      // and this value (note that the Dynamixel would not move when the position value is 								//out of movable range. Check e-manual about the range of the Dynamixel you use.)
 
 #define DXL_MOVING_STATUS_THRESHOLD     123   //20                  // Dynamixel moving status threshold
 #define ESC_ASCII_VALUE                 0x1b
@@ -129,15 +128,16 @@ double t = 0.0;
 int goal_0 = 0;
 int goal_1 = 0;
 
-void callBackOfJointCommand(joy_handler_hori::JoySelectedData joy_data);
+//void callBackOfJointCommand(joy_handler_hori::JoySelectedData joy_data);
 
-
+void  callBackOfJointCommand(snake_msgs::snake_joint_command joint_command);
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "dxl_control_node");
 	ros::NodeHandle nh;
 
-	ros::Subscriber joint_command = nh.subscribe("joy_selected_data", 100, &callBackOfJointCommand);
+	ros::Subscriber joint_command = nh.subscribe("joint_command", 100, &callBackOfJointCommand);
+	//ros::Subscriber joint_command = nh.subscribe("joy_selected_data", 100, &callBackOfJointCommand);
 
 	ros::Rate loop_rate(10);
 
@@ -173,8 +173,20 @@ int main(int argc, char **argv)
 	portHandler->closePort();
 	ROS_INFO("PORT CLOSED!\n");
 }
+
+void  callBackOfJointCommand(snake_msgs::snake_joint_command joint_command)
+{
+	int pos = (joint_command.target_position*4095)/360+2048;
+	int id = joint_command.joint_index;
+	dxl_move_to_goal_position(id, pos);
+	//ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
+}
+
+
+/*
 void  callBackOfJointCommand(joy_handler_hori::JoySelectedData joy)
 {
+
 	if(joy.button_r1){
 
 		goal_0++;
@@ -211,6 +223,8 @@ void  callBackOfJointCommand(joy_handler_hori::JoySelectedData joy)
 		ROS_INFO("DXL#%d ,pos = %d \n",id, pos);
 	}
 }
+*/
+
 
 int dxl_init()
 {

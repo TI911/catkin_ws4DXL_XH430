@@ -18,7 +18,7 @@
 #include "robot_spec.h"
 #include "winding_gait.h"
 #include "helical_wave_propagate_motion.h"
-#include "inchworm_gait.h"
+#include "dxl_xh_test.h"
 
 //#include "sidewinding_gait.h"
 //#include "lateral_rolling_gait.h"
@@ -42,28 +42,31 @@ class SnakeControl {   //: public SnakebotControlRequest{
 
   static void Initialize() {
     SnakeControlRequest::Initialize();
+
   }
 
   static double loop_rate(){ return loop_rate_; }
 
   static double loop_rate_;  	 // [Hz]
   static double sampling_time_;  // [s] サンプリングタイム loop_rateの逆
+  static int goalPos; // For test dxl_xh
 
   static void CallBackOfJoySelectedData(joy_handler_hori::JoySelectedData joy_data);
 
   static void OperateMoveWinding(joy_handler_hori::JoySelectedData joy_data);
   static void OperateMoveWindingShift(joy_handler_hori::JoySelectedData joy_data);
   static void OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySelectedData joy_data);
-  static void OperateMoveInchwormGait(joy_handler_hori::JoySelectedData joy_data);
-
+  static void OperateMoveDXL_XH_Test(joy_handler_hori::JoySelectedData joy_data);
   static void OperateMoveTest(joy_handler_hori::JoySelectedData joy_data);
+
+
 
   static ControlMode control_mode_;
   static GaitMode    gait_mode_;
 
   static WindingGait        winding_gait_;
   static HelicalWavePropagateMotion helical_wave_propagate_motion_;
-  static InchwormGait inchworm_gait_;
+  static DXL_XH_Test dxl_xh_test_;
 
 
 };

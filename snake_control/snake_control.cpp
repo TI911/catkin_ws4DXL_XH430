@@ -10,14 +10,14 @@
 #include <vector>
 
 #include "snake_control.h"
-//#include "snake_control_request.h"
+#include "snake_control_request.h"
 
 const float MIN_JOYSTICK_ON = 0.1;  // ジョイスティックの値がこれより大きければ反応する
 
 RobotSpec spec(
-    /* num_joint             = */ 18,
+    /* num_joint             = */ 39,
     /* link_length_head [m]  = */ 0.20,
-    /* link_length_body [m]  = */ 0.069,
+    /* link_length_body [m]  = */ 0.09,
     /* link_length_tail [m]  = */ 0.20,
     /* link_diameter [m]     = */ 0.08,
     /* max_joint_angle [rad] = */ 90.0*M_PI/180.0,
@@ -41,11 +41,11 @@ HelicalWavePropagateMotion SnakeControl::helical_wave_propagate_motion_(
 	    spec.link_length_body()// 0.0905
 );
 
-InchwormGait SnakeControl::inchworm_gait_(
-		/* spec             = */ spec,
-	    spec.link_length_body()// 0.0905);
+DXL_XH_Test SnakeControl::dxl_xh_test_(
+		spec
 
 );
+
 
 //=== static メンバ変数の定義 ===============//
 SnakeControl::GaitMode SnakeControl::gait_mode_       = SnakeControl::GAIT_MODE_TEST;
@@ -93,35 +93,20 @@ void SnakeControl::OperateMoveWindingShift(joy_handler_hori::JoySelectedData joy
 	}
 
 	const double V_CHANGING_SPEED = 0.01;		//体軸に沿った速度
-	double js_data = joy_data.joy_stick_l_y_upwards;
-	winding_gait_.add_v(V_CHANGING_SPEED * js_data);
+    	double js_data = joy_data.joy_stick_l_y_upwards;
+    	winding_gait_.add_v(V_CHANGING_SPEED * js_data);
 
 	//winding_gait_.WindingShift(spec);
-    winding_gait_.WindingCalcAngle(spec);
+    	winding_gait_.WindingCalcAngle(spec);
 	target_joint_angle = winding_gait_.snake_model_param.angle;
 	SnakeControlRequest::RequestJointSetPosition(target_joint_angle);
 }
-
-void SnakeControl::OperateMoveInchwormGait(joy_handler_hori::JoySelectedData joy_data)
-{
-	std::vector<double> target_joint_angle(spec.num_joint(), 0.0);  // 値0.0で初期化;
-
-	if(joy_data.joy_stick_l_y_upwards!=0){
-		inchworm_gait_.add_s(joy_data.joy_stick_l_y_upwards/10);
-	}
-
-	inchworm_gait_.InchwormGaitByShift(spec);
-	target_joint_angle = inchworm_gait_.snake_model_param.angle;
-	SnakeControlRequest::RequestJointSetPosition(target_joint_angle);
-}
-
 
 void SnakeControl::OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySelectedData joy_data)
 {
 	std::vector<double> target_joint_angle(spec.num_joint(), 0.0);  // 値0.0で初期化;
 
-	/*** 螺旋半径を変化させる      radius_   ***/
-	const double RADIUS_CHANGING_SPEED = 0.01;	/*	半径を変化させる速度	*/
+	const double RADIUS_CHANGING_SPEED = 0.01;	/*		*/
 	if(joy_data.button_r1){
 		helical_wave_propagate_motion_.add_radius(RADIUS_CHANGING_SPEED * sampling_time_);
 	}else if(joy_data.button_r2){
@@ -130,8 +115,7 @@ void SnakeControl::OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySe
 		helical_wave_propagate_motion_.add_radius(0);
 	}
 
-	/*** 螺旋ピッチを変化させる    b(t)= n*t/2*π  ***/
-	const double DELTA_CHANGING_SPEED = 0.01;	/*	螺旋ピッチを変化させる速度	*/
+	const double DELTA_CHANGING_SPEED = 0.01;	/*	曲線の1/4周期の長さ l 変化速度	*/
 	if(joy_data.button_l1){
 		helical_wave_propagate_motion_.add_delta(DELTA_CHANGING_SPEED * sampling_time_);
 	}else if(joy_data.button_l2){
@@ -140,29 +124,44 @@ void SnakeControl::OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySe
 		helical_wave_propagate_motion_.add_delta(0);
 	}
 
-	/***  phiを入れるflag_ ON にする,   A*sech(ω*t-Φ)  ***/
 	if(joy_data.button_cross){
-		helical_wave_propagate_motion_.set_flag();
+		helical_wave_propagate_motion_.set_theta(0.01);
 	}
 
-	/***  helical wave が入ってくる周期，あるいはΦ入る周期 pi_*π/ω ***/
-	if(joy_data.button_triangle){    /* △を押すと   pi_ = pi_ + 0.1 */
-		helical_wave_propagate_motion_.set_pi(0.1);
-	}else if(joy_data.button_square){     /* □を押すと   pi_ = pi_ - 0.1 */
-		helical_wave_propagate_motion_.set_pi(-0.1);
-	}else{
-		helical_wave_propagate_motion_.set_pi(0.0);
-	}
-
-	/***  螺旋曲線に沿った s を増加する   ***/
 	if(joy_data.joy_stick_l_y_upwards!=0){
-		helical_wave_propagate_motion_.add_s(joy_data.joy_stick_l_y_upwards/20);
+		helical_wave_propagate_motion_.add_s(joy_data.joy_stick_l_y_upwards/10);
 	}
 
-	//helical_wave_propagate_motion_.WavePropagation(spec);
 	helical_wave_propagate_motion_.HelicalWavePropagateMotionByShift(spec);
 	target_joint_angle = helical_wave_propagate_motion_.snake_model_param.angle;
 	SnakeControlRequest::RequestJointSetPosition(target_joint_angle);
+}
+
+void SnakeControl::OperateMoveDXL_XH_Test(joy_handler_hori::JoySelectedData joy_data)
+{
+	std::vector<double> target_joint_angle(spec.num_joint(), 0.0);  // 値0.0で初期化;
+
+	double test= 0;
+	if(joy_data.cross_key_up){
+
+		test =+ 0.2;
+
+		//dxl_xh_test_.yaw_move(test);
+
+		target_joint_angle = dxl_xh_test_.snake_model_param.angle;
+		SnakeControlRequest::RequestJointSetPosition(target_joint_angle);
+	}
+
+	if(joy_data.cross_key_down){
+
+
+	}
+
+
+	if(joy_data.cross_key_left or joy_data.cross_key_right){
+
+	}
+
 }
 
 void SnakeControl::OperateMoveTest(joy_handler_hori::JoySelectedData joy_data)

@@ -46,56 +46,35 @@ void callback(joy_handler_hori::JoySelectedData joy_selected_data)
 	}
 }
 
+
 // 通常
 void timerCallback(const ros::TimerEvent& event)
 {
 	static int mode = 0;
 
-/*	if (joystick.button_ps) {
+	if (joystick.button_ps) {
 		mode = 0;    //ストップモード
 		ROS_INFO("Stop mode -->");
-	}*/
+	}
 
 	if (joystick.button_select and joystick.button_triangle) {
-		mode=1;    //横うねりモード
-		ROS_INFO("Winding Gait -->");
+		mode=1;    //Inchworm Gait
+		ROS_INFO("Inchworm Gait -->");
 	}
-    if(mode==1){	//横うねりモード
-    	SnakeControl::OperateMoveWindingShift(joystick);
+
+    if(mode==1){	//Inchworm Gait
+    	//SnakeControl::OperateMoveWindingShift(joystick);
+    	SnakeControl::OperateMoveInchwormGait(joystick);
     }
 
 	if (joystick.button_select and joystick.button_circle) {
 		mode=2;    //helical wave propagate motion
 		ROS_INFO("***  Helical Wave Propagate Motion -->  ***");
 	}
+
     if(mode==2){
     	SnakeControl::OperateMoveHelicalWavePropagateMotion(joystick);
     }
-
-	if(joystick.button_select and joystick.button_r1){
-		mode = 10;
-		ROS_INFO("SUMIJYU MODE  -->");
-	}
-	if(mode==10){
-		SnakeControl::OperateMoveDXL_XH_Test(joystick);
-	}
-
-
-	if(joystick.button_ps){
-		SnakeControlRequest::RequestJointActivateAll();
-	}else if(joystick.button_select and joystick.button_ps){
-		SnakeControlRequest::RequestJointFreeAll();
-
-	}
-
-
-
-
-
-
-
-
-
 
 
     if (joystick.button_r3 ){	//ノード再起動

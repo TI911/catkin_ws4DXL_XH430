@@ -12,6 +12,18 @@
 ros::Publisher SnakeControlRequest::pub_joint_target_position_;
 ros::Publisher SnakeControlRequest::pub_joint_command_;
 
+
+/** @fn
+ * @brief
+ */
+void SnakeControlRequest::RequestJointPing(uint8_t joint_index)
+{
+	snake_msgs::snake_joint_command joint_command;
+	joint_command.joint_index = joint_index;
+	joint_command.ping = true;
+	pub_joint_command_.publish(joint_command);
+}
+
 /** @fn
  * @brief 全ての関節のエラーをクリアする
  */

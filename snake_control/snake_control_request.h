@@ -23,7 +23,7 @@ class SnakeControlRequest {
   }
 
   //--- Joint -----------------------//
-
+  static void RequestJointPing(uint8_t joint_index);
   // 関節への動作要求
   static void RequestJointClearErrorAll();
   static void RequestJointActivate(uint8_t joint_index);

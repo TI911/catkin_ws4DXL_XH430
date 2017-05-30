@@ -56,7 +56,6 @@ double SnakeControl::sampling_time_;
 
 extern joy_handler_hori::JoySelectedData joystick;
 
-
 //=== static メンバ変数の定義 終わり =========//
 
 /** @fn
@@ -65,8 +64,8 @@ extern joy_handler_hori::JoySelectedData joystick;
  * @detail
  *  joy_selected_dataからボタン，ジョイスティックの状態を読み取りそれに応じた動作を行う
  */
-void SnakeControl::CallBackOfJoySelectedData(joy_handler_hori::JoySelectedData joy_data) {
-
+void SnakeControl::CallBackOfJoySelectedData(joy_handler_hori::JoySelectedData joy_data)
+{
   memcpy(&joystick, &joy_data, sizeof(joy_data));
 }
 

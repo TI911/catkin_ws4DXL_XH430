@@ -11,10 +11,9 @@
 #include "robot_spec.h"
 #include "snake_control.h"
 
-
 joy_handler_hori::JoySelectedData joystick;
 
-//for test
+//NO USED, just for test
 void callback(joy_handler_hori::JoySelectedData joy_selected_data)
 {
 	if(joy_selected_data.button_circle){
@@ -46,7 +45,6 @@ void callback(joy_handler_hori::JoySelectedData joy_selected_data)
 	}
 }
 
-
 // 通常
 void timerCallback(const ros::TimerEvent& event)
 {
@@ -76,18 +74,22 @@ void timerCallback(const ros::TimerEvent& event)
     	SnakeControl::OperateMoveHelicalWavePropagateMotion(joystick);
     }
 
-
-
-
-   if(joystick.button_start){
-		SnakeControlRequest::RequestJointActivateAll();
+    //All motor TORQUE ON
+    if(joystick.button_start){
+    	SnakeControlRequest::RequestJointActivateAll();  //
 		ros::Duration(0.2).sleep();
-   }
+    }
 
-   if(joystick.button_select and joystick.button_start){
-    		SnakeControlRequest::RequestJointFreeAll();
-    		ros::Duration(0.2).sleep();
-   }
+    // All motor TORQUE OFF
+    if(joystick.button_select and joystick.button_start){
+    	SnakeControlRequest::RequestJointFreeAll();
+    	ros::Duration(0.2).sleep();
+    }
+
+    if(joystick.button_ps){
+    	uint8_t id=0;
+    	SnakeControlRequest::RequestJointPing(id);
+    }
 
     if (joystick.button_r3 ){	//ノード再起動
     	pid_t pid;

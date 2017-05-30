@@ -34,7 +34,7 @@ class HelicalWavePropagateMotion: public ShiftControlMethod {
 		flag_ = 0;
 
 		a_ = 0.50;//Init(spec);
-		omega_= 0.3;
+		omega_= 0.2;
 		phi_0_ = -2*M_PI;
 		phi_hyperbolic_ = -2*M_PI;
 		pre_s_ = 0;

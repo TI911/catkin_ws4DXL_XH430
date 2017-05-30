@@ -52,10 +52,10 @@ void timerCallback(const ros::TimerEvent& event)
 {
 	static int mode = 0;
 
-	if (joystick.button_ps) {
+/*	if (joystick.button_ps) {
 		mode = 0;    //ストップモード
 		ROS_INFO("Stop mode -->");
-	}
+	}*/
 
 	if (joystick.button_select and joystick.button_triangle) {
 		mode=1;    //Inchworm Gait
@@ -76,6 +76,18 @@ void timerCallback(const ros::TimerEvent& event)
     	SnakeControl::OperateMoveHelicalWavePropagateMotion(joystick);
     }
 
+
+
+
+   if(joystick.button_start){
+		SnakeControlRequest::RequestJointActivateAll();
+		ros::Duration(0.2).sleep();
+   }
+
+   if(joystick.button_select and joystick.button_start){
+    		SnakeControlRequest::RequestJointFreeAll();
+    		ros::Duration(0.2).sleep();
+   }
 
     if (joystick.button_r3 ){	//ノード再起動
     	pid_t pid;

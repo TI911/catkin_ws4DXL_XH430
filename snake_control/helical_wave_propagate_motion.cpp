@@ -388,7 +388,7 @@ void HelicalWavePropagateMotion::CalculateTargetAngle2(RobotSpec spec)
 		snake_model_param.psi.pop_back();
 		snake_model_param.psi_hyper.pop_back();
 	}
-	usleep(1000*10);        // 制御に時間がかかるので1秒寝て待つ
+	//usleep(1000*10);        // 制御に時間がかかるので1秒寝て待つ
 }
 
 void HelicalWavePropagateMotion::CalculateTargetAngle3(RobotSpec spec)
@@ -415,5 +415,5 @@ void HelicalWavePropagateMotion::CalculateTargetAngle3(RobotSpec spec)
 
 		snake_model_param.psi_hyper.pop_back();
 	}
-	usleep(1000*5);        // 制御に時間がかかるので1秒寝て待つ
+	//usleep(1000*5);        // 制御に時間がかかるので1秒寝て待つ
 }

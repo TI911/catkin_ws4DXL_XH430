@@ -15,9 +15,9 @@
 const float MIN_JOYSTICK_ON = 0.1;  // ジョイスティックの値がこれより大きければ反応する
 
 RobotSpec spec(
-    /* num_joint             = */ 39,
+    /* num_joint             = */ 19,
     /* link_length_head [m]  = */ 0.20,
-    /* link_length_body [m]  = */ 0.09,
+    /* link_length_body [m]  = */ 0.060,
     /* link_length_tail [m]  = */ 0.20,
     /* link_diameter [m]     = */ 0.08,
     /* max_joint_angle [rad] = */ 90.0*M_PI/180.0,
@@ -160,7 +160,7 @@ void SnakeControl::OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySe
 
 	/***  螺旋曲線に沿った s を増加する   ***/
 	if(joy_data.joy_stick_l_y_upwards!=0){
-		helical_wave_propagate_motion_.add_s(joy_data.joy_stick_l_y_upwards/10);
+		helical_wave_propagate_motion_.add_s(joy_data.joy_stick_l_y_upwards/30);
 	}
 
 	//helical_wave_propagate_motion_.WavePropagation(spec);

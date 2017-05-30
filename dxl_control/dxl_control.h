@@ -30,7 +30,7 @@
 using namespace dynamixel;
 
 #define QUEUE_SIZE_JOINT    100
-#define NUM_OF_MOTOR 2
+#define NUM_OF_MOTOR 20
 #define NUM_JOINT 20
 
 
@@ -53,10 +53,7 @@ using namespace dynamixel;
 #define PROTOCOL_VERSION                2.0         // See which protocol version is used in the Dynamixel
 
 // Default setting
-#define DXL_ID							1
 
-#define DXL1_ID                         1            // Dynamixel#1 ID: 1
-#define DXL2_ID                         2            // Dynamixel#2 ID: 2
 #define BAUDRATE                        1000000
 #define DEVICENAME                      "/dev/ttyUSB0"      // Check which port is being used on your controller
                                                             // ex) Windows: "COM1"   Linux: "/dev/ttyUSB0"

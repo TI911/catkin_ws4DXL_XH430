@@ -1,7 +1,6 @@
 
 #include <stdint.h>
 #include <ros/ros.h>
-//#include "snake_robot_master.h"
 #include "dxl_control.h"
 
 int main(int argc, char **argv) {

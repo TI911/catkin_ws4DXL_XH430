@@ -55,10 +55,6 @@ int kbhit(void)
 #endif
 }
 
-double t = 0.0;
-int goal_0 = 0;
-int goal_1 = 0;
-
 dynamixel::PortHandler *portHandler;
 dynamixel::PacketHandler *packetHandler;
 ros::Subscriber sub_joint_command_;
@@ -71,16 +67,24 @@ void DynamixelControl::CallBackOfJointCommand(const snake_msgs::snake_joint_comm
 	    return;
 	  }
 
-	  if(joint_command.ping){DynamixelPing(); }
+	  if(joint_command.ping){
+		  DynamixelPing(joint_command.joint_index);
+	  }
 
-	  if(joint_command.change_mode_to_active){
+	  if(joint_command.change_mode_to_active and joint_command.target_all){
 		  DynamixelTorqueEnable();
-	  }else if(joint_command.change_mode_to_free){
+	  }
+	  if(joint_command.change_mode_to_free and joint_command.target_all){
 		  DynamixelTorqueDisable();
 	  }
 
-	  if(joint_command.set_position){DynamxielGoalPosition(joint_command.joint_index,
-			  (joint_command.target_position*4095)/360+2048); }
+
+	  if(joint_command.set_position){
+		  uint8_t joint_index = joint_command.joint_index;
+		  float target_position = (joint_command.target_position*4095)/360+2048;
+
+		  DynamxielGoalPosition(joint_index, target_position);
+	  }
 
 }
 
@@ -132,26 +136,24 @@ int DynamixelControl::DynamixelTorqueEnable()
 	uint8_t dxl_error = 0;                // Dynamixel error
 
    	// Enable Dynamixel#i Torque
-    for(int i=0; i<NUM_OF_MOTOR; i++){
 
-    	dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, i, ADDR_XH_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+   	dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, ADDR_XH_BROADCAST_ID, ADDR_XH_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
 
-    	if (dxl_comm_result != COMM_SUCCESS)
-    	{
-    		packetHandler->printTxRxResult(dxl_comm_result);
-    		return 0;
-    	}
-    	else if (dxl_error != 0)
-    	{
-    		packetHandler->printRxPacketError(dxl_error);
-    		return 0;
-    	}
-    	else
-    	{
-    		ROS_INFO("DXL#%d has been successfully connected and TORQUE ON", i);
-    	}
-    }
-    return 1;
+   	if (dxl_comm_result != COMM_SUCCESS)
+   	{
+   		packetHandler->printTxRxResult(dxl_comm_result);
+   		return 0;
+   	}
+   	else if (dxl_error != 0)
+   	{
+   		packetHandler->printRxPacketError(dxl_error);
+   		return 0;
+   	}
+   	else
+   	{
+   		ROS_INFO("DXL has been successfully connected and TORQUE ON");
+   	}
+   	return 1;
 }
 
 int DynamixelControl::DynamixelTorqueDisable()
@@ -159,24 +161,23 @@ int DynamixelControl::DynamixelTorqueDisable()
 	int dxl_comm_result = COMM_TX_FAIL;     // Communication result
 	uint8_t dxl_error = 0;                  // Dynamixel error
 
-	for(int i=0; i<NUM_OF_MOTOR; i++){
-		// Disable Dynamixel#1 Torque
-		dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, i, ADDR_XH_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
-    	if (dxl_comm_result != COMM_SUCCESS)
-    	{
-    		packetHandler->printTxRxResult(dxl_comm_result);
-    	}
-    	else if (dxl_error != 0)
-    	{
-    		packetHandler->printRxPacketError(dxl_error);
-    	}else
-    	{
-    		ROS_INFO("DXL#%d has been successfully connected and TORQUE OFF", i);
-    	}
-    }
+	// Disable Dynamixel#1 Torque
+	dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, ADDR_XH_BROADCAST_ID, ADDR_XH_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+	if (dxl_comm_result != COMM_SUCCESS)
+	{
+		packetHandler->printTxRxResult(dxl_comm_result);
+	}
+	else if (dxl_error != 0)
+	{
+		packetHandler->printRxPacketError(dxl_error);
+	}else
+	{
+		ROS_INFO("DXL has been successfully connected and TORQUE OFF");
+	}
+
 }
 
-int DynamixelControl::DynamixelPing()
+int DynamixelControl::DynamixelPing(uint8_t joint_index)
 {
 	int dxl_comm_result = COMM_TX_FAIL;             // Communication result
 	uint8_t dxl_error = 0;                          // Dynamixel error
@@ -185,21 +186,19 @@ int DynamixelControl::DynamixelPing()
 	// Try to ping the Dynamixel
 	// Get Dynamixel model number
 
-	for(int i=0; i<NUM_OF_MOTOR; i++){
-	  dxl_comm_result = packetHandler->ping(portHandler, i, &dxl_model_number, &dxl_error);
-	  if (dxl_comm_result != COMM_SUCCESS){
-	    packetHandler->printTxRxResult(dxl_comm_result);
-	  }
-	  else if (dxl_error != 0){
-	    packetHandler->printRxPacketError(dxl_error);
-	  }
-
-	  ROS_INFO("[ID:%03d] ping Succeeded. Dynamixel model number : %d\n", i, dxl_model_number);
-
-	  // Close port
-	  portHandler->closePort();
-
+	dxl_comm_result = packetHandler->ping(portHandler, joint_index, &dxl_model_number, &dxl_error);
+	if (dxl_comm_result != COMM_SUCCESS){
+		packetHandler->printTxRxResult(dxl_comm_result);
 	}
+	else if (dxl_error != 0){
+		packetHandler->printRxPacketError(dxl_error);
+	}
+
+	ROS_INFO("[ID:%03d] ping Succeeded. Dynamixel model number : %d",joint_index, dxl_model_number);
+
+	// Close port
+	portHandler->closePort();
+
 	return 0;
 }
 

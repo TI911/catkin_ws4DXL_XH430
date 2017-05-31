@@ -57,7 +57,8 @@ int kbhit(void)
 
 dynamixel::PortHandler *portHandler;
 dynamixel::PacketHandler *packetHandler;
-ros::Subscriber sub_joint_command_;
+ros::Subscriber DynamixelControl::sub_joint_command_;
+ros::Publisher DynamixelControl::pub_joint_data_;
 
 void DynamixelControl::CallBackOfJointCommand(const snake_msgs::snake_joint_command joint_command)
 {
@@ -69,6 +70,11 @@ void DynamixelControl::CallBackOfJointCommand(const snake_msgs::snake_joint_comm
 
 	  if(joint_command.ping){
 		  DynamixelPing(joint_command.joint_index);
+	  }
+
+	  if(joint_command.reset){
+		  DynamixelReboot();
+		  //DynamixelTorqueEnable();
 	  }
 
 	  if(joint_command.change_mode_to_active and joint_command.target_all){
@@ -85,6 +91,10 @@ void DynamixelControl::CallBackOfJointCommand(const snake_msgs::snake_joint_comm
 
 		  DynamxielGoalPosition(joint_index, target_position);
 	  }
+
+	  //if(joint_command.read_position){
+		  DynamixelReadPositonAll();
+	  //}
 
 }
 
@@ -196,12 +206,85 @@ int DynamixelControl::DynamixelPing(uint8_t joint_index)
 
 	ROS_INFO("[ID:%03d] ping Succeeded. Dynamixel model number : %d",joint_index, dxl_model_number);
 
-	// Close port
-	portHandler->closePort();
-
 	return 0;
 }
 
+
+void DynamixelControl::DynamixelReboot()
+{
+	int dxl_comm_result = COMM_TX_FAIL;             // Communication result
+	uint8_t dxl_error = 0;                          // Dynamixel error
+
+	// Try reboot
+	// Dynamixel LED will flicker while it reboots
+	dxl_comm_result = packetHandler->reboot(portHandler, ADDR_XH_BROADCAST_ID, &dxl_error);
+
+	if (dxl_comm_result != COMM_SUCCESS){
+	    packetHandler->printTxRxResult(dxl_comm_result);
+	}else if (dxl_error != 0){
+		packetHandler->printRxPacketError(dxl_error);
+	}
+	printf("[ID: ALL] reboot Succeeded");
+}
+
+
+double DynamixelControl::DynamixelReadPositonAll()
+{
+	int dxl_comm_result = COMM_TX_FAIL;             // Communication result
+	uint8_t dxl_error = 0;                          // Dynamixel error
+	bool dxl_addparam_result = false;                // addParam result
+	bool dxl_getdata_result = false;                 // GetParam result
+	int32_t dxl_present_position = 0;
+
+	 snake_msgs::snake_joint_data joint_data;
+
+
+/*	// Initialize Groupsyncread instance for Present Position
+	dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_XH_PRESENT_POSITION, LEN_XH_PRESENT_POSITION);
+
+	dxl_addparam_result = packetHandler->read1ByteTx(portHandler, ADDR_XH_BROADCAST_ID, ADDR_XH_PRESENT_POSITION);
+	//dxl_addparam_result = groupSyncRead.addParam(1);
+
+    // Syncread present position
+     dxl_comm_result = groupSyncRead.txRxPacket();
+     if (dxl_comm_result != COMM_SUCCESS) packetHandler->printTxRxResult(dxl_comm_result);
+
+     // Check if groupsyncread data of Dynamixel#1 is available
+     dxl_getdata_result = groupSyncRead.isAvailable(1, ADDR_XH_PRESENT_POSITION, LEN_XH_PRESENT_POSITION);
+     if (dxl_getdata_result != true)
+     {
+       fprintf(stderr, "[ID:ALL] groupSyncRead getdata failed");
+       return 0;
+     }*/
+
+     // Read present position
+     dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 1, ADDR_XH_PRESENT_POSITION, (uint32_t*)&dxl_present_position, &dxl_error);
+     if (dxl_comm_result != COMM_SUCCESS)
+     {
+       packetHandler->printTxRxResult(dxl_comm_result);
+     }
+     else if (dxl_error != 0)
+     {
+       packetHandler->printRxPacketError(dxl_error);
+     }
+
+     //printf("[ID:%03d]   PresPos:%03d\n", 1, dxl_present_position);
+
+
+
+     // Get Dynamixel#1 present position value
+     //dxl_present_position = groupSyncRead.getData(1, ADDR_XH_PRESENT_POSITION, LEN_XH_PRESENT_POSITION);
+
+     joint_data.value = dxl_present_position* 360 / 4096;  //[deg]
+     joint_data.joint_index = 1;
+     pub_joint_data_.publish(joint_data);
+
+     //groupSyncRead.clearParam();
+     //printf("[ID:%03d] GoalPos:%03d  PresPos:%03d", DXL1_ID, dxl_goal_position[index], dxl1_present_position);
+
+     return 1;
+
+}
 
 /*  モータを目標位置まで動かす, SYNC でGoal Positionのデータを送る
   *  まとめて送るではなく，一つ一つで送る
@@ -213,8 +296,7 @@ int DynamixelControl::DynamxielGoalPosition(int id, int goalPos)
 {
 	// Initialize GroupSyncWrite instance
 	dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_XH_GOAL_POSITION, LEN_XH_GOAL_POSITION);
-	// Initialize Groupsyncread instance for Present Position
-	dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_XH_PRESENT_POSITION, LEN_XH_PRESENT_POSITION);
+
 
 	int  dxl_comm_result      = COMM_TX_FAIL;         // Communication result
 	bool dxl_addparam_result  = false;                // addParam result

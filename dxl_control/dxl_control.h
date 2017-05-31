@@ -23,6 +23,8 @@
 #include "dynamixel_sdk.h"
 #include "std_msgs/String.h"
 #include "snake_msgs/snake_joint_command.h"
+#include "snake_msgs/snake_joint_data.h"
+
 
 //using namespace dynamixel;
 #define QUEUE_SIZE_JOINT    100
@@ -56,6 +58,7 @@
 #define DXL_MOVING_STATUS_THRESHOLD     123            // Dynamixel moving status threshold
 #define ESC_ASCII_VALUE                 0x1b
 
+
 #define NUM_JOINT 20
 
 class DynamixelControl{
@@ -65,7 +68,10 @@ public:
 		ros::NodeHandle node;
 
 	    //--- Subscriver ---//
-		static ros::Subscriber sub_joint_command_ = node.subscribe("joint_command", QUEUE_SIZE_JOINT, DynamixelControl::CallBackOfJointCommand);
+		sub_joint_command_ = node.subscribe("joint_command", QUEUE_SIZE_JOINT, DynamixelControl::CallBackOfJointCommand);
+
+		//--- Publisher ---//
+		pub_joint_data_    = node.advertise<snake_msgs::snake_joint_data>("joint_data", 100);
 
 		DynamixelOpenPort();
 	}
@@ -75,13 +81,17 @@ public:
 	static int DynamixelTorqueDisable();
 
 	static int DynamixelPing(uint8_t joint_index);
+	static void DynamixelReboot();
+
 	static int DynamxielGoalPosition(int id, int goalPos);
+	static double DynamixelReadPositonAll();
 
 private:
 	// CallBack関数
 	static void CallBackOfJointCommand(const snake_msgs::snake_joint_command joint_command);
 
-	//static ros::Subscriber sub_joint_command_;
+	static ros::Subscriber sub_joint_command_;
+	static ros::Publisher  pub_joint_data_   ;
 };
 
 #endif /* DXL_CONTROL_SRC_DXL_CONTROL_H_ */

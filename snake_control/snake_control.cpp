@@ -162,6 +162,13 @@ void SnakeControl::OperateMoveHelicalWavePropagateMotion(joy_handler_hori::JoySe
 		helical_wave_propagate_motion_.add_s(joy_data.joy_stick_l_y_upwards/30);
 	}
 
+	if(joy_data.joy_stick_r_y_upwards!=0){
+		helical_wave_propagate_motion_.add_psi4roll(joy_data.joy_stick_r_y_upwards/1000);
+	}else{
+		helical_wave_propagate_motion_.add_psi4roll(0);
+
+	}
+
 	//helical_wave_propagate_motion_.WavePropagation(spec);
 	helical_wave_propagate_motion_.HelicalWavePropagateMotionByShift(spec);
 	target_joint_angle = helical_wave_propagate_motion_.snake_model_param.angle;

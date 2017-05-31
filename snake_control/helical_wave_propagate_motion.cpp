@@ -42,7 +42,13 @@ void HelicalWavePropagateMotion::set_phi(double phi)
 void HelicalWavePropagateMotion::set_pi(double pi)
 {
     pi_ += pi;
-	//ROS_INFO(">  PI_ = %4.3f", pi_);
+	ROS_INFO(">  PI_ = %4.3f", pi_);
+}
+
+void HelicalWavePropagateMotion::set_psi4roll(double psi4roll)
+{
+	psi4roll_ = psi4roll;
+	//ROS_INFO(">  psi4roll_ = %4.3f", psi4roll_);
 }
 
 void HelicalWavePropagateMotion::HelicalWavePropagateMotionByShift(RobotSpec spec)
@@ -70,7 +76,7 @@ void HelicalWavePropagateMotion::HelicalWavePropagateMotionByShift(RobotSpec spe
 		CalculateCurvatureTorsionWithHyperbolic();  //ハイパボリック曲線の曲率κと捩率τの計算
 
 		//psi_hyper = psi_hyper + (tau_helical_  - tau_hyperbolic_);  //捻転を抑制するため，
-		psi_hyper = psi_hyper + (tau_hyperbolic_ - tau_helical_ );  //捻転を抑制するため，
+		psi_hyper = psi_hyper + (tau_hyperbolic_ - tau_helical_ ) - psi4roll_;  //捻転を抑制するため，
 
 
 		if(flag_){

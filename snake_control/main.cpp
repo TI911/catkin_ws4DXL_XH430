@@ -87,8 +87,15 @@ void timerCallback(const ros::TimerEvent& event)
     }
 
     if(joystick.button_ps){
-    	uint8_t id=0;
-    	SnakeControlRequest::RequestJointPing(id);
+    	//uint8_t id=0;
+    	//SnakeControlRequest::RequestJointPing(id);
+
+    	SnakeControlRequest::RequestJointResetAll();
+    }
+
+    if(joystick.button_l3){
+    	SnakeControlRequest::RequestJointReadPositionAll();
+    	ros::Duration(0.1).sleep();
     }
 
     if (joystick.button_r3 ){	//ノード再起動
